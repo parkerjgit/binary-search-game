@@ -6,59 +6,27 @@
     <!-- Bootstrap and CSS here-->
     <link rel='stylesheet' type='text/css' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'>
     <link rel='stylesheet' type='text/css' href='css/style.css'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.js"></script>
+    <script src="sketch.js"></script>
 
   </head>
   <body>
 
-      <div id='app' class='container center'>
+    <div id='header'>
+      <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - geometry - spline extrusion examples by <a href="http://www.lab4games.net/zz85/blog" target="_blank" rel="noopener">zz85</a></br>
+      based on 
+      <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> spline extrusion examples by <a href="http://www.lab4games.net/zz85/blog" target="_blank" rel="noopener">zz85</a>
+    </div>
 
-        <div id='headers'>
-          <h1 id='title'>Play the Guessing Game!</h1>
-          <h3 id='subtitle'>Guess a number between 1-100!</h3>
-          
-        </div>
+    <div id='control'>
+      <button id='play' class='btn btn-success' >Play!</button>
+      <input id='player-input' class='center' placeholder="#" maxlength='3' autofocus=autofocus></input>
+      <!-- <button id='submit' class='btn btn-success' >Go!</button> -->
+      <button id='reset' class='btn btn-success' >Reset</button>
+    </div>
 
-        <div id='main'>
-          <div id='input-parent'>
-            <input id='player-input' class='center' placeholder="#" maxlength='3' autofocus=autofocus></input>
-            <button class='btn btn-success' id='submit'>Go!</button>
-          </div>
-
-          <div id='guesses'>
-            <ul id='guess-list'>
-              <li class='guess'>-</li>
-              <li class='guess'>-</li>
-              <li class='guess'>-</li>
-              <li class='guess'>-</li>
-              <li class='guess'>-</li>
-            </ul>
-          </div>
-
-          <div id="menu-btns">
-            <button class='btn btn-large center' id='reset'>Reset</button>
-            <button class='btn btn-large center' id='hint'>Hint</button>
-          </div>
-        </div>
-      </div>
-
-
-
-    <div id='footer' class='center'>
-        <div class='row'>
-          <div class='col-sm-4'>
-            <img src='img/fa-logo@2x.png'></img>
-          </div>
-
-          <div class='col-sm-4'>
-            <h4>Project by YOUR NAME HERE</h4>
-          </div>
-
-          <div class='col-sm-4'>
-            <img src='img/grace_hopper_academy.png'></img>
-          </div>
-
-
-        </div>
+    <div id='footer'>
+      Project by <a>Joshua Parker</a>
     </div>
 
     <script
@@ -66,5 +34,6 @@
       integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
       crossorigin="anonymous"></script>
     <script type="text/javascript" src="js/GuessingGame.js"></script>
+    <script type="text/javascript" src="js/GuessingGame_UI.js"></script>
   </body>
 </html>

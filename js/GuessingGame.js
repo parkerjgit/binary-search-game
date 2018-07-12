@@ -1,24 +1,11 @@
 
 var Game = function() {
+
     this.playersGuess = null;
     this.winningNumber = generateWinningNumber();
     this.pastGuesses = [];
-}
-
-function generateWinningNumber() {
-    return Math.ceil(Math.random()*100);
-}
-
-
-function newGame(game) {
-    Game.call(game); 
-    $('#subtitle').text('Guess a number between 1-100!');
-    $('#guess-list').empty();
-    for (let i=0; i<5; i++) {
-        $('#guess-list').append("<li class='guess'>-</li>");
-    }
-    $('#submit').prop({ disabled: false });
-    $('#hint').prop({ disabled: false });
+    this.status = null;
+    this.state = 'idle';
 }
 
 Game.prototype.difference = function() {
@@ -31,67 +18,117 @@ Game.prototype.isLower = function() {
 
 Game.prototype.playersGuessSubmission = function(num) {
 
-    var invalidIf = [
+    const invalidIf = [
         (typeof num !== 'number'),
         (Number.isNaN(num)),
         (num < 1), 
         (num > 100)
     ];
 
+    // validate input
     if (invalidIf.some(x => x)) {
         throw "That is an invalid guess.";      
     } else {
         this.playersGuess = num;
+        this.status = this.checkGuess();
     }
 
-    return this.checkGuess(this.playersGuess);
+    // submit guess
+    return this.status
 }
 
-Game.prototype.checkGuess = function(guess) {
+Game.prototype.setState = function() {
 
-    console.log(this);
+}
 
-    if (this.pastGuesses.length === 4) {
-        return "You Lose.";
+Game.prototype.checkGuess = function() {
 
-    } else if (guess === this.winningNumber) {
-        return "You Win!";
-
-    } else if (this.pastGuesses.includes(this.playersGuess)) {
-        return "You have already guessed that number."
-
-    } else {
-        this.pastGuesses.push(guess);
-
-        let d = this.difference();
-        if (d < 10) return "You\'re burning up!";
-        if (d < 25) return "You\'re lukewarm.";
-        if (d < 50) return "You\'re a bit chilly.";
-
-        return "You\'re ice cold!";
+    const guess = {
+        win:  () => this.playersGuess === this.winningNumber,
+        lose: () => this.pastGuesses.length === 5,
+        dupl: () => this.pastGuesses.includes(this.playersGuess)
     }
+
+    const response = {
+        lose: "You Lose.",
+        win:  "You Win!",
+        dupl: "You have already guessed that number.",
+        cold: "You\'re ice cold!",
+        cool: "You\'re a bit chilly.",
+        warm: "You\'re lukewarm.",
+        hot:  "You\'re burning up!"
+    }
+
+    // duplicate?
+    if (guess.dupl()) {
+        return response.dupl;  
+    } else {
+        // record guess
+        this.pastGuesses.push(this.playersGuess);
+    }
+
+    // win or lose?
+    if (guess.win()) {
+        this.state = 'win';
+        return response.win;
+    }
+    if (guess.lose()) {
+        this.state = 'lose';
+        return response.lose;
+    }
+
+    // how far off?
+    let d = this.difference();
+    if (d < 10) return response.hot;
+    if (d < 25) return response.warm;
+    if (d < 50) return response.cool;
+
+    // must be ice cold.
+    return response.cold;
 }
 
 Game.prototype.provideHint = function() {
 
+    // add winning number
     var res = [this.winningNumber]; 
-
-    for (let i=0; i<2; i++) {
+    
+    // add random numbers
+    var numRandom = 2;
+    for (let i=0; i<numRandom; i++) {
         res.push(generateWinningNumber());
     }
-    return shuffle(res);
+
+    // return numbers shuffled
+    return (function shuffle(arr) {
+
+        var remaining = arr.length;
+
+        while(remaining) {
+            let i = Math.floor(Math.random() * remaining);
+            let j = --remaining;
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    })(res);
 }
 
-function shuffle(arr) {
+// utils
+function generateWinningNumber() {
+    return Math.ceil(Math.random()*100);
+}
 
-    var remaining = arr.length;
 
-    while(remaining) {
-        let i = Math.floor(Math.random() * remaining);
-        let j = --remaining;
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+// this is the old UI!
+
+function newGame(game) {
+    Game.call(game); 
+    $('#subtitle').text('Guess a number between 1-100!');
+    $('#guess-list').empty();
+    for (let i=0; i<5; i++) {
+        $('#guess-list').append("<li class='guess'>-</li>");
     }
-    return arr;
+    $('#submit').prop({ disabled: false });
+    $('#hint').prop({ disabled: false });
 }
 
 function makeAGuess(game) {
@@ -100,10 +137,10 @@ function makeAGuess(game) {
     var output = game.playersGuessSubmission(parseInt(guess,10));
     // console.log(output);
 
-    if (output !== 'You have already guessed that number.') {
-        $('#guess-list').find('li:last').remove();
-        $('#guess-list').prepend("<li class='guess'>"+game.playersGuess+"</li>");
-    }
+    // if (output !== 'You have already guessed that number.') {
+    //     $('#guess-list').find('li:last').remove();
+    //     $('#guess-list').prepend("<li class='guess'>"+game.playersGuess+"</li>");
+    // }
 
     $('#subtitle').text(output);
 
@@ -113,35 +150,18 @@ function makeAGuess(game) {
     } 
 }
 
-function resetGame(game) {
-    game = newGame();
-    console.log(game)
-    $('#subtitle').text('Guess a number between 1-100!');
-    $('#guess-list').empty();
-    for (let i=0; i<5; i++) {
-        $('#guess-list').append("<li class='guess'>-</li>");
-    }
-    $('#submit').prop({ disabled: false });
-    $('#hint').prop({ disabled: false });
+// function resetGame(game) {
+//     game = newGame();
+//     console.log(game)
+//     $('#subtitle').text('Guess a number between 1-100!');
+//     $('#guess-list').empty();
+//     for (let i=0; i<5; i++) {
+//         $('#guess-list').append("<li class='guess'>-</li>");
+//     }
+//     $('#submit').prop({ disabled: false });
+//     $('#hint').prop({ disabled: false });
 
-}
+// }
 
-// $(document).ready(function() {
-$(function() {
-    var game = new Game();
 
-    $('#submit').click(function(e) {
-       makeAGuess(game);
-    })
-
-    $('#reset').click(function(e) {
-        newGame(game);
-    })
-
-    $('#player-input').keypress(function(event) {
-        if ( event.which == 13 ) {
-           makeAGuess(game);
-        }
-    })
-})
 
