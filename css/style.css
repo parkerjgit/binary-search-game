@@ -45,6 +45,36 @@ img {
     text-align:center;
 }
 
+#info {
+    width: 100%;
+    /*border-top: solid 2px black;*/
+    /*background-color: white;*/
+    position: fixed;
+    top: 40px;
+    padding: 5px;
+    /*font-family:Monospace;*/
+    font-size:13px;
+    text-align:center;
+}
+
+#timer {
+    width: 100%;
+    /*border-top: solid 2px black;*/
+    /*background-color: white;*/
+    
+    position: fixed;
+    bottom: 100px;
+    
+    font-family:Monospace;
+    font-size:13px;
+    text-align:center;
+}
+#timer > span {
+    padding: 10px;
+    background: black;
+    color: white;
+}
+
 /*.guess {
     display: inline;
     font-size: 60px;
@@ -75,6 +105,19 @@ img {
     margin: 5% auto 50px;
 }*/
 
+
+#hilo {
+    width: 100%;
+    font-size: 40px;
+}
+#lo {
+    float: left;
+    margin-left: 40px;
+}
+#hi {
+    float: right;
+    margin-right: 40px;
+}
 
 .shadow {
     box-shadow: 2px 2px 2px darkgray

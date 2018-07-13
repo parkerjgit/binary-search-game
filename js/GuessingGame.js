@@ -1,3 +1,9 @@
+const STATE = Object.freeze({
+    IDLE: 1,
+    PLAYING: 2,
+    WIN: 3,
+    LOSE: 4
+})
 
 var Game = function() {
 
@@ -5,7 +11,7 @@ var Game = function() {
     this.winningNumber = generateWinningNumber();
     this.pastGuesses = [];
     this.status = null;
-    this.state = 'idle';
+    this.state = STATE.IDLE;
 }
 
 Game.prototype.difference = function() {
@@ -69,11 +75,11 @@ Game.prototype.checkGuess = function() {
 
     // win or lose?
     if (guess.win()) {
-        this.state = 'win';
+        this.state = STATE.WIN;
         return response.win;
     }
     if (guess.lose()) {
-        this.state = 'lose';
+        this.state = STATE.LOSE;
         return response.lose;
     }
 
@@ -141,6 +147,14 @@ function makeAGuess(game) {
     //     $('#guess-list').find('li:last').remove();
     //     $('#guess-list').prepend("<li class='guess'>"+game.playersGuess+"</li>");
     // }
+
+    // if is lower
+    if (game.isLower()) {
+        $('#lo').text(game.playersGuess)
+    } else {
+        $('#hi').text(game.playersGuess)
+    }
+
 
     $('#subtitle').text(output);
 
