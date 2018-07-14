@@ -12,7 +12,7 @@
   <body>
 
     <div id='header'>
-      <a href="https://threejs.org" target="_blank" rel="noopener">Guessing Game</a> - solution by <a href="http://www.lab4games.net/zz85/blog" target="_blank" rel="noopener">Joshua Parker</a></br> in collaboration with Fullstack Academy and Grace Hopper. Enjoy!
+      <a href="https://threejs.org" target="_blank" rel="noopener">Guessing Game</a>
     </div>
 
     <div id='info'>
@@ -21,13 +21,14 @@
 
     <div id='control'>
       <div id='hilo'>
-        <span id='lo'>0</span>
-        <span id='hi'>100</span>
+        <span id='lo'>-</span>
+        <span id='hi'>-</span>
       </div>
       <button id='play' class='btn btn-success' >Play!</button>
-      <input id='player-input' class='center' placeholder="?" maxlength='3' autofocus=autofocus></input>
+      <input id='player-input' class='center' placeholder="?" autofocus=autofocus></input> <!-- maxlength='3' -->
       <!-- <button id='submit' class='btn btn-success' >Go!</button> -->
-      <button id='reset' class='btn btn-success' >Reset</button>   
+      <button id='reset' class='btn btn-success' >Reset</button>
+      <div id='winner'></div> 
     </div>
 
     <!-- <div id='timer'>

@@ -118,6 +118,10 @@ img {
     float: right;
     margin-right: 40px;
 }
+#winner {
+    font-size: 150px;
+    color: #ff000036;
+}
 
 .shadow {
     box-shadow: 2px 2px 2px darkgray
