@@ -8,12 +8,20 @@ const STATE = Object.freeze({
 
 const MAXGUESSES = 1000;
 
-var Game = function() {
-    this.playersGuess = null; 
-    this.pastGuesses = [];  
-    this.state = STATE.IDLE;
-    this.timer = null;
-    this.level = 1;
+var Game = function({
+    playersGuess = null,
+    pastGuesses = [], 
+    state = STATE.IDLE,
+    timer = null,
+    level = 1,
+} = {}) {
+
+    this.playersGuess = playersGuess; 
+    this.pastGuesses = pastGuesses;  
+    this.state = state;
+    this.timer = timer;
+    this.level = level;
+
     this.lo = 0 + Math.floor(Math.random()*20);
     this.hi = Math.pow(2,(6+this.level)) - Math.floor(Math.random()*20);
     this.winningNumber = generateWinningNumber(this.lo, this.hi);
@@ -46,30 +54,24 @@ Game.prototype.setup = function() {
 
     // event binding
     $('#play').click((e) => { 
-        this.getReady();         
+        this.getReady();
+        this.render();      
     })    
     $('#reset').click((e) => {
-        this.resetGame();       
+        this.resetGame();
+        this.render();    
     })
     $(document).keypress((e) => {
         handleKeyPress(e, this);
+        this.render();
     });
 };
 
 Game.prototype.levelUp = function() {
-    this.playersGuess = null; 
-    this.pastGuesses = [];  
-    this.state = STATE.READY;
-    this.timer = null;
-
-    //console.log(this.state);  
-    this.level ++;
-    this.lo = 0 + Math.floor(Math.random()*20);
-    this.hi = Math.pow(2,(6+this.level)) - Math.floor(Math.random()*20);
-    this.winningNumber = generateWinningNumber(this.lo, this.hi);
-    this.status = 'Guess a number between ' + (this.lo).toString() + ' and ' + (this.hi).toString() + '. (you have 60 seconds!)';
-
-    this.render();
+    Game.call(this, {
+        state: STATE.READY,
+        level: ++this.level
+    })
 }
 
 Game.prototype.render = function() {
@@ -151,7 +153,7 @@ MUTATORS
 Game.prototype.getReady = function() {
     this.state = STATE.READY;
     this.status = 'Key in your first guess. The timer starts when you hit ENTER.';
-    this.render();
+    // this.render();
 }
 
 Game.prototype.startPlaying = function() {
@@ -166,7 +168,7 @@ Game.prototype.startPlaying = function() {
 
 Game.prototype.resetGame = function() {
     Game.call(this);
-    this.render();
+    // this.render();
 }
 
 Game.prototype.parseInput = function() {
@@ -176,23 +178,23 @@ Game.prototype.parseInput = function() {
 
 Game.prototype.submitGuess = function(num) {
 
-    const invalidIf = [
+    const invalid = [
         (typeof num !== 'number'),
         (Number.isNaN(num)),
         (num < 0), 
-        (num > Infinity)
-    ];
+        (num > Number.MAX_SAFE_INTEGER)
+    ].some(x => x);
 
-    // validate input
-    if (invalidIf.some(x => x)) {
+    // submit if valid
+    if (invalid) {
         throw "That is an invalid guess.";      
     } else {
-        // submit
         this.playersGuess = num;
         this.status = this.update();
         this.broadCast();
     }
 
+    // for some reason, this is needed for lo/hi to update instantly!!??
     this.render();
 }
 

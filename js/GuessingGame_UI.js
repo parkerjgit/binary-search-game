@@ -144,7 +144,7 @@ var myp5 = new p5( function( p ) {
         tic++;
     }
 
-    function drawArm() {
+    function drawArm() { 
 
         var x, y;
 
@@ -154,7 +154,7 @@ var myp5 = new p5( function( p ) {
         x = layer2.sin(layer2.radians(timerAngle))*(timerRadius+50);
         y = layer2.cos(layer2.radians(timerAngle))*(timerRadius+50);
 
-        layer2.clear();
+        layer2.clear(); // this is not working...
         //layer2.background(bg_color);
         layer2.noFill();
         layer2.stroke(200,200,200,10);
