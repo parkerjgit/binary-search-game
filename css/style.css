@@ -26,11 +26,11 @@
     transform: translate(-50%, -50%) 
 }
     #intro {
-        font-size: 30px;
-        padding: 100px;
+        font-size: 28px;
+        padding: 150px;
     }
     #status {
-        font-size: 24px;
+        font-size: 18px;
         padding: 200px;
     }
     #winning-number {

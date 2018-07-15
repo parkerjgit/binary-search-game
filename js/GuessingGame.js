@@ -27,7 +27,8 @@ var Game = function({
     this.lo = 0 + Math.floor(Math.random()*20);
     this.hi = Math.pow(2,(6+this.level)) - Math.floor(Math.random()*20);
     this.winningNumber = generateWinningNumber(this.lo, this.hi);
-    this.status = 'Level ' + this.level + ': Guess a number between ' + (this.lo).toString() + ' and ' + (this.hi).toString() + '. You have 60 seconds! Key in your first guess. The clock starts when you press ENTER.';
+
+    this.status = '';
 }
 
 /****************************
@@ -36,30 +37,6 @@ RENDERING / DOM
 
 // tbd: should prop use stateful handlers instead.
 Game.prototype.setup = function() {
-
-    const handleKeyPress = function(e, s) {
-        if ( e.which == 13 ) {  
-            if (s === STATE.IDLE) {  
-                this.getReady();
-            } else if (s === STATE.READY) {
-                this.startPlaying();
-                this.makeAGuess(); // first guess
-            } else if (s === STATE.PLAYING) {
-                this.makeAGuess(); // subsequent
-            } else if (s === STATE.WIN) {
-                this.levelUp();
-            } else if (s === STATE.LOSE) {
-                this.resetGame();
-            } else {
-                // do nothing
-            }
-        } else {
-            if (s === STATE.READY ||
-                s === STATE.PLAYING) {
-                this.status = '';
-            }
-        }
-    }
 
     // event binding
     $('#play').click((e) => { 
@@ -84,24 +61,16 @@ Game.prototype.setup = function() {
     });
 };
 
-Game.prototype.levelUp = function() {
-    Game.call(this, {
-        state: STATE.READY,
-        level: ++this.level
-    })
-}
-
 Game.prototype.update = function() {
     switch (this.state) {
         case STATE.IDLE:
             this.getReady();
             break;
         case STATE.READY:
-            this.startPlaying();
-            this.makeAGuess(); // first guess
+            this.makeAGuess(); // first guess.
             break;
         case STATE.PLAYING:
-            this.makeAGuess(); // subsequent
+            this.makeAGuess(); // subsequent guesses.
             break;
         case STATE.WIN:
             this.levelUp();
@@ -200,13 +169,15 @@ MUTATORS
 Game.prototype.getReady = function() {
     this.state = STATE.READY;
 
-    this.status = 'Level ' + this.level + ': You have 60 seconds to guess a number between ' + (this.lo).toString() + ' and ' + (this.hi).toString() + '. When your ready, key in your first guess. The clock starts when you press ENTER.';
+    this.status = `Level ${this.level}: You have 60 seconds to guess a number between \
+        ${(this.lo).toString()} and ${(this.hi).toString()}. When your ready, key in your \
+        first guess. The clock starts when you press ENTER.`;
 }
 
 Game.prototype.startPlaying = function() {
     this.state = STATE.PLAYING;
 
-    // start the clock.
+    // tbd: replace with real timer -> https://stackoverflow.com/questions/20618355/the-simplest-possible-javascript-countdown-timer
     this.timer = setTimeout(() => {
         this.state = (this.state === STATE.PLAYING) ? STATE.LOSE : this.state;
         this.status = this.checkGuess();
@@ -214,21 +185,12 @@ Game.prototype.startPlaying = function() {
     }, 60000);
 }
 
-Game.prototype.resetGame = function() {
-    // Game.call(this);
-    Game.call(this, {
-        state: STATE.READY,
-        level: 1
-    })
-}
-
 Game.prototype.makeAGuess = function() {
-
-    console.log(this)
 
     const parse = function() {
         var input = $('#players-guess').val();
         $('#players-guess').val("");
+
         return parseInt(input, 10); 
     };
 
@@ -248,8 +210,10 @@ Game.prototype.makeAGuess = function() {
     };
 
     const submit = function(input) {
-        console.log(this)
         if (typeof input !== 'undefined') {
+            if (this.state === STATE.READY) {
+                this.startPlaying();
+            }
             this.playersGuess = input;
             this.status = this.checkGuess();
             this.broadCast();
@@ -259,29 +223,21 @@ Game.prototype.makeAGuess = function() {
     submit.call(this, validate(parse()));
 }
 
-
-Game.prototype.parseInput = function() {
-    this.submitGuess(parseInt($('#players-guess').val(), 10));
-    $('#players-guess').val("");
+Game.prototype.levelUp = function() {
+    Game.call(this, {
+        state: STATE.IDLE,
+        level: ++this.level
+    })
+    this.getReady();
 }
 
-Game.prototype.submitGuess = function(num) {
-
-    const invalid = [
-        (typeof num !== 'number'),
-        (Number.isNaN(num)),
-        (num < 0), 
-        (num > Number.MAX_SAFE_INTEGER)
-    ].some(x => x);
-
-    // submit if valid
-    if (invalid) {
-        throw "That is an invalid guess.";      
-    } else {
-        this.playersGuess = num;
-        this.status = this.checkGuess();
-        this.broadCast();
-    }
+Game.prototype.resetGame = function() {
+    // Game.call(this);
+    Game.call(this, {
+        state: STATE.IDLE,
+        level: 1
+    })
+    this.getReady();
 }
 
 Game.prototype.checkGuess = function() {
@@ -296,13 +252,13 @@ Game.prototype.checkGuess = function() {
     }
 
     const response = {
-        lose: "You Lose. The number was ------> " + this.winningNumber.toString() + ". (hit enter to play again)",
-        win:  "You Win! Ready for level " + (this.level + 1).toString() + "? (hit enter)",
+        lose: `You Lose. The number was ${this.winningNumber.toString()}. (hit enter to play again)`,
+        win:  `You Win! Ready for level ${(this.level + 1).toString()}? (hit enter)`,
         dupl: "You have already guessed that number.",
         cold: "You\'re ice cold!",
         cool: "You\'re a bit chilly.",
         warm: "You\'re lukewarm.",
-        hot:  "You\'re burning up!"
+        hot:  "You\'re burning up!" 
     }
 
     if (guess.lose()) {

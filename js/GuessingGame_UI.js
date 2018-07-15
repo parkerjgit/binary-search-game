@@ -192,12 +192,14 @@ var myp5 = new p5( function( p ) {
         y = 0
         x2 = p.sin(p.radians(timerAngle))*(timerRadius+60);
         y2 = p.cos(p.radians(timerAngle))*(timerRadius+60);
+        // x2 = p.sin(p.radians(angle))*radius;
+        // y2 = p.cos(p.radians(angle))*radius;
 
         p.noFill();
         p.stroke(0); 
         p.line(x, y, x2, y2);
 
-        p.fill(0);
+        p.fill(255,0,0);
         p.noStroke();
         p.textSize(24);
         p.text('39 sec!', x2, y2);
