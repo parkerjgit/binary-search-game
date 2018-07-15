@@ -11,31 +11,34 @@
   </head>
   <body>
 
-    <div id='header'>
+    <div id='header' class='meta'>
       <a href="https://threejs.org" target="_blank" rel="noopener">Guessing Game</a>
     </div>
 
-    <div id='info'>
-      <h3 id='subtitle'>Guess a number between 1-100!</h3>
-    </div>
-
-    <div id='control'>
+    <div id='content'>
+      <input 
+        id='players-guess' 
+        placeholder="" 
+        type="number" 
+        min="0" 
+        autofocus=autofocus></input>
+      <div id='intro'>
+        Welcome to the Guessing Game! Here's how it works: Try to guess a number in under 60 seconds. A visualization will indicate your time remaining and whether you are moving in the right or wrong direction (toward the center or away from it). Numbers on the left and right represent the real-time lower and upper bounds on the search domain. As you advance through levels, the domain will double in size. Thats it! If your ready to start, then ready your hand on the number pad (if you have one), and press <span style="font-weight: bold;">enter</span>...</div>
+      <div id='status'></div>
+      <div id='winning-number'></div>
+      <div id='level'></div>
       <div id='hilo'>
-        <span id='lo'>-</span>
-        <span id='hi'>-</span>
+        <span id='lo'></span>
+        <span id='hi'></span>
       </div>
-      <button id='play' class='btn btn-success' >Play!</button>
-      <input id='player-input' class='center' placeholder="?" type="number" min="0" autofocus=autofocus></input> <!-- maxlength='3' -->
-      <!-- <button id='submit' class='btn btn-success' >Go!</button> -->
-      <button id='reset' class='btn btn-success' >Reset</button>
-      <div id='winner'></div> 
+      
     </div>
 
     <!-- <div id='timer'>
       <span id='subtitle'>00:00:00</span>
     </div> -->
 
-    <div id='footer'>
+    <div id='footer' class='meta'>
       Project by <a>Joshua Parker</a>
     </div>
 

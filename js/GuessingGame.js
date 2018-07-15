@@ -6,6 +6,8 @@ const STATE = Object.freeze({
     LOSE: 5
 })
 
+const intro = ''
+
 const MAXGUESSES = 1000;
 
 var Game = function({
@@ -25,7 +27,7 @@ var Game = function({
     this.lo = 0 + Math.floor(Math.random()*20);
     this.hi = Math.pow(2,(6+this.level)) - Math.floor(Math.random()*20);
     this.winningNumber = generateWinningNumber(this.lo, this.hi);
-    this.status = 'Guess a number between ' + (this.lo).toString() + ' and ' + (this.hi).toString() + '. (you have 60 seconds!)';
+    this.status = 'Level ' + this.level + ': Guess a number between ' + (this.lo).toString() + ' and ' + (this.hi).toString() + '. You have 60 seconds! Key in your first guess. The clock starts when you press ENTER.';
 }
 
 /****************************
@@ -35,19 +37,26 @@ RENDERING / DOM
 // tbd: should prop use stateful handlers instead.
 Game.prototype.setup = function() {
 
-    const handleKeyPress = function(e, ctx) {
-        if ( e.which == 13 ) {       
-            if (ctx.state === STATE.READY) {
-                ctx.startPlaying();
-                ctx.parseInput();
-                ctx.submitGuess();
-            } else if (ctx.state === STATE.PLAYING) {
-                ctx.parseInput();
-                ctx.submitGuess(); 
-            } else if (ctx.state === STATE.WIN) {
-                ctx.levelUp();
+    const handleKeyPress = function(e, s) {
+        if ( e.which == 13 ) {  
+            if (s === STATE.IDLE) {  
+                this.getReady();
+            } else if (s === STATE.READY) {
+                this.startPlaying();
+                this.makeAGuess(); // first guess
+            } else if (s === STATE.PLAYING) {
+                this.makeAGuess(); // subsequent
+            } else if (s === STATE.WIN) {
+                this.levelUp();
+            } else if (s === STATE.LOSE) {
+                this.resetGame();
             } else {
                 // do nothing
+            }
+        } else {
+            if (s === STATE.READY ||
+                s === STATE.PLAYING) {
+                this.status = '';
             }
         }
     }
@@ -62,8 +71,16 @@ Game.prototype.setup = function() {
         this.render();    
     })
     $(document).keypress((e) => {
-        handleKeyPress(e, this);
-        this.render();
+        if ( e.which == 13 ) {  
+            this.update();
+            this.render();
+        } else {
+            if (this.state === STATE.READY ||
+                this.state === STATE.PLAYING) {
+                this.status = '';
+            }
+            this.render();
+        }
     });
 };
 
@@ -74,39 +91,69 @@ Game.prototype.levelUp = function() {
     })
 }
 
-Game.prototype.render = function() {
+Game.prototype.update = function() {
     switch (this.state) {
         case STATE.IDLE:
-            $('#play').show();
-            $('#player-input').hide();
-            $('#reset').hide();
+            this.getReady();
             break;
         case STATE.READY:
-            $('#winner').hide();
-            $('#winner').text(this.winningNumber);
+            this.startPlaying();
+            this.makeAGuess(); // first guess
+            break;
         case STATE.PLAYING:
-            $('#play').hide();
-            $('#player-input').show().focus();
-            $('#reset').hide();
-            $('#lo').text(this.lo);
-            $('#hi').text(this.hi);
-            $('#winner').hide();
+            this.makeAGuess(); // subsequent
             break;
         case STATE.WIN:
-            $('#play').hide();
-            $('#player-input').hide();
-            $('#reset').hide();
-            $('#winner').show();
+            this.levelUp();
             break;
         case STATE.LOSE:
-            $('#play').hide();
-            $('#player-input').hide();
-            $('#reset').show();
+            this.resetGame();
             break;
         default:
             break;
     }
-    $('#subtitle').text(this.status);
+}
+
+Game.prototype.render = function() {
+    switch (this.state) {
+        case STATE.IDLE:
+            $('#players-guess').hide();
+            $('#level').hide();
+            break;
+        case STATE.READY:
+            $('#intro').hide();
+            $('#players-guess').show().focus();
+            $('#lo').text(this.lo);
+            $('#hi').text(this.hi);
+            $('#winning-number').hide();
+            $('#winning-number').text(this.winningNumber); 
+            $('#level').text(this.level); 
+            $('#level').show();
+            $('#status').text(this.status);
+            break;
+        case STATE.PLAYING:
+            $('#players-guess').show().focus();
+            $('#lo').text(this.lo);
+            $('#hi').text(this.hi);
+            $('#winning-number').hide();
+            $('#level').hide();
+            $('#status').text(this.status);
+            break;
+        case STATE.WIN:
+            $('#players-guess').hide();
+            $('#winning-number').show();
+            $('#level').hide();
+            $('#status').text(this.status);
+            break;
+        case STATE.LOSE:
+            $('#players-guess').hide();
+            $('#level').hide();
+            $('#status').text(this.status);
+            break;
+        default:
+            break;
+    }
+    
 }
 
 /****************************
@@ -152,28 +199,70 @@ MUTATORS
 
 Game.prototype.getReady = function() {
     this.state = STATE.READY;
-    this.status = 'Key in your first guess. The timer starts when you hit ENTER.';
-    // this.render();
+
+    this.status = 'Level ' + this.level + ': You have 60 seconds to guess a number between ' + (this.lo).toString() + ' and ' + (this.hi).toString() + '. When your ready, key in your first guess. The clock starts when you press ENTER.';
 }
 
 Game.prototype.startPlaying = function() {
     this.state = STATE.PLAYING;
 
+    // start the clock.
     this.timer = setTimeout(() => {
         this.state = (this.state === STATE.PLAYING) ? STATE.LOSE : this.state;
-        this.status = this.update();
+        this.status = this.checkGuess();
         this.render();
     }, 60000);
 }
 
 Game.prototype.resetGame = function() {
-    Game.call(this);
-    // this.render();
+    // Game.call(this);
+    Game.call(this, {
+        state: STATE.READY,
+        level: 1
+    })
 }
 
+Game.prototype.makeAGuess = function() {
+
+    console.log(this)
+
+    const parse = function() {
+        var input = $('#players-guess').val();
+        $('#players-guess').val("");
+        return parseInt(input, 10); 
+    };
+
+    const validate = function(input) {
+        const invalid = [
+            (typeof input !== 'number'),
+            (Number.isNaN(input)),
+            (input < 0), 
+            (input > Number.MAX_SAFE_INTEGER)
+        ].some(x => x);
+
+        if (invalid) {
+            throw "That is an invalid guess.";      
+        } else {
+            return input
+        }
+    };
+
+    const submit = function(input) {
+        console.log(this)
+        if (typeof input !== 'undefined') {
+            this.playersGuess = input;
+            this.status = this.checkGuess();
+            this.broadCast();
+        }
+    };
+
+    submit.call(this, validate(parse()));
+}
+
+
 Game.prototype.parseInput = function() {
-    this.submitGuess(parseInt($('#player-input').val(), 10));
-    $('#player-input').val("");
+    this.submitGuess(parseInt($('#players-guess').val(), 10));
+    $('#players-guess').val("");
 }
 
 Game.prototype.submitGuess = function(num) {
@@ -190,15 +279,12 @@ Game.prototype.submitGuess = function(num) {
         throw "That is an invalid guess.";      
     } else {
         this.playersGuess = num;
-        this.status = this.update();
+        this.status = this.checkGuess();
         this.broadCast();
     }
-
-    // for some reason, this is needed for lo/hi to update instantly!!??
-    this.render();
 }
 
-Game.prototype.update = function() {
+Game.prototype.checkGuess = function() {
 
     var g = this.playersGuess;
 
@@ -210,7 +296,7 @@ Game.prototype.update = function() {
     }
 
     const response = {
-        lose: "You Lose. The number was ------> " + this.winningNumber.toString(),
+        lose: "You Lose. The number was ------> " + this.winningNumber.toString() + ". (hit enter to play again)",
         win:  "You Win! Ready for level " + (this.level + 1).toString() + "? (hit enter)",
         dupl: "You have already guessed that number.",
         cold: "You\'re ice cold!",
@@ -260,11 +346,6 @@ Game.prototype.broadCast = function() {
 /****************************
 UTILS
 ****************************/
-
-// utils
-// function generateWinningNumber() {
-//     return Math.ceil(Math.random()*100);
-// }
 
 function generateWinningNumber(min=0,max=100){
     return Math.floor(Math.random()*(max-min+1)+min);

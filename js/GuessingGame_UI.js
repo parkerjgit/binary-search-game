@@ -66,6 +66,7 @@ var myp5 = new p5( function( p ) {
 
     p.draw = function() { 
         if (game.state === STATE.PLAYING) {
+            console.log(game.state)
             drawTrack();
             drawTimer();
             //drawArm();
@@ -75,7 +76,7 @@ var myp5 = new p5( function( p ) {
             resetDrawing();         
         }
 
-        p.image(layer2, 0, 0);
+        //p.image(layer2, 0, 0);
     }
 
     function resetDrawing() {
