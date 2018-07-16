@@ -6,27 +6,44 @@ const STATE = Object.freeze({
     LOSE: 5
 })
 
-const intro = ''
-
 const MAXGUESSES = 1000;
+
+var statusTimer;
+
+/****************************
+Game Engine
+****************************/
 
 var Game = function({
     playersGuess = null,
     pastGuesses = [], 
     state = STATE.IDLE,
-    timer = null,
     level = 1,
+    timer = new Timer(60, 100),
+    timeRemaining = '00:60'
 } = {}) {
 
     this.playersGuess = playersGuess; 
     this.pastGuesses = pastGuesses;  
     this.state = state;
-    this.timer = timer;
     this.level = level;
+    this.timeRemaining = timeRemaining;
 
     this.lo = 0 + Math.floor(Math.random()*20);
     this.hi = Math.pow(2,(6+this.level)) - Math.floor(Math.random()*20);
     this.winningNumber = generateWinningNumber(this.lo, this.hi);
+
+    this.timer = timer;
+    this.timer.onTick((minutes, seconds) => {
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+        this.timeRemaining = minutes + ':' + seconds;
+    });
+    this.timer.onExpired(() => {
+        // this.state = STATE.LOSE;
+        // this.status = this.checkGuess();
+        this.loseGame();
+    });
 
     this.status = '';
 }
@@ -84,6 +101,20 @@ Game.prototype.update = function() {
 }
 
 Game.prototype.render = function() {
+
+    const flashStatus = function(duration) {
+
+        $('#status').text(this.status);
+
+        if (typeof statusTimer !== undefined) {
+            clearTimeout(statusTimer);
+        }
+        statusTimer = setTimeout(() => 
+            $('#status').fadeOut(() => 
+                $('#status').text('').show())
+            , duration);
+    }
+
     switch (this.state) {
         case STATE.IDLE:
             $('#players-guess').hide();
@@ -106,7 +137,7 @@ Game.prototype.render = function() {
             $('#hi').text(this.hi);
             $('#winning-number').hide();
             $('#level').hide();
-            $('#status').text(this.status);
+            flashStatus.call(this, 3000);
             break;
         case STATE.WIN:
             $('#players-guess').hide();
@@ -122,7 +153,6 @@ Game.prototype.render = function() {
         default:
             break;
     }
-    
 }
 
 /****************************
@@ -172,17 +202,13 @@ Game.prototype.getReady = function() {
     this.status = `Level ${this.level}: You have 60 seconds to guess a number between \
         ${(this.lo).toString()} and ${(this.hi).toString()}. When your ready, key in your \
         first guess. The clock starts when you press ENTER.`;
+
+    this.broadCastReady();
 }
 
 Game.prototype.startPlaying = function() {
     this.state = STATE.PLAYING;
-
-    // tbd: replace with real timer -> https://stackoverflow.com/questions/20618355/the-simplest-possible-javascript-countdown-timer
-    this.timer = setTimeout(() => {
-        this.state = (this.state === STATE.PLAYING) ? STATE.LOSE : this.state;
-        this.status = this.checkGuess();
-        this.render();
-    }, 60000);
+    this.timer.start();
 }
 
 Game.prototype.makeAGuess = function() {
@@ -240,6 +266,12 @@ Game.prototype.resetGame = function() {
     this.getReady();
 }
 
+Game.prototype.loseGame = function() {
+    this.state = STATE.LOSE;
+    this.status = `You Lose. The number was ${this.winningNumber.toString()}. (hit enter to play again)`;
+    this.render();
+}
+
 Game.prototype.checkGuess = function() {
 
     var g = this.playersGuess;
@@ -262,7 +294,7 @@ Game.prototype.checkGuess = function() {
     }
 
     if (guess.lose()) {
-        // this.state = STATE.LOSE;
+        this.state = STATE.LOSE;
         return response.lose;
     }
 
@@ -280,7 +312,7 @@ Game.prototype.checkGuess = function() {
     // win or lose?
     if (guess.win()) {
         this.state = STATE.WIN;
-        clearTimeout(this.timer);
+        this.timer.stop();
         return response.win;
     }
     
@@ -299,6 +331,16 @@ Game.prototype.broadCast = function() {
     $(window).trigger(evt);
 }
 
+Game.prototype.broadCastReady = function() {
+    var evt = $.Event('ready');
+    $(window).trigger(evt);
+}
+
+Game.prototype.broadCastTimesUp = function() {
+    var evt = $.Event('timesUp');
+    $(window).trigger(evt);
+}
+
 /****************************
 UTILS
 ****************************/
@@ -306,3 +348,69 @@ UTILS
 function generateWinningNumber(min=0,max=100){
     return Math.floor(Math.random()*(max-min+1)+min);
 }
+
+/****************************
+Timer adapted from:
+https://stackoverflow.com/questions/20618355/the-simplest-possible-javascript-countdown-timer
+****************************/
+
+function Timer(duration, increment = 1000) {
+  this.duration = duration;
+  this.increment = increment;
+  this.callbacks = [];
+  this.timesUp = null
+  this.running = false;
+}
+
+Timer.prototype.start = function() {
+
+    var start = Date.now(),
+        that = this,
+        remain, 
+        obj;
+
+    this.running = true;
+  
+    (function timer() {
+
+        remain = that.duration - Math.trunc( ((Date.now() - start) / 1000) );
+
+        // time is not up (lose) or stopped (win) -> keep going
+        if (remain > 0 && that.running) {
+
+            that.callbacks.forEach(function(fn) {
+                fn.call(this, ...[
+                    Math.trunc(remain / 60),
+                    Math.trunc(remain % 60)
+                ])
+            }, that);
+
+            setTimeout(timer, that.increment);
+
+        } else if (remain <= 0) { // time is up -> lose
+            that.timesUp.call(this);
+
+        } else { // time was stopped -> win 
+            // do nothing for now...
+        }
+    }());
+};
+
+Timer.prototype.stop = function() {
+    this.running = false;
+}
+
+Timer.prototype.onTick = function(fn) {
+    if (typeof fn === 'function') {
+        this.callbacks.push(fn);
+    }
+    return this;
+};
+
+Timer.prototype.onExpired = function(fn) {
+    if (typeof fn === 'function') {
+        this.timesUp = fn;
+    }
+    return this;
+};
+

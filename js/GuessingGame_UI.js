@@ -1,32 +1,17 @@
 var myp5 = new p5( function( p ) {
 
-    // track
-    var angle;
-    var radius;
-    // var xPrev = 0.0;
-    // var yPrev = 0.0;
-    var x;
-    var y;
-
-    // timer vars
-    var tic;
-    var timerAngle;
-    var timerRadius;
-
     // constants
     const frame_rate = 30; // 30 frames/sec
-    const time_scale = 60; // 60 sec timer.
-    const tic_step = (360/time_scale/frame_rate); // in degrees
+    const tics_per_sec = 10; // 10 tics/sec
+    const duration = 60; // 60 sec timer.
+    const track_step = (360/duration/frame_rate); // in degrees
+    const clock_step = (360/duration/tics_per_sec); // in degrees
 
-    // game object
-    var game;
-    var diff_init;
-
-    // config
-    var font;
-    var fontsize;
-    var bg_color;
-    var tic_color;
+    var angle, radius, x, y; // track
+    var tic, timerAngle, timerRadius; // timer vars
+    var game, diff_init; // game object
+    var font, fontsize, bg_color; // config
+    // var tic_color;
 
     var layer2;
 
@@ -34,7 +19,7 @@ var myp5 = new p5( function( p ) {
 
         fontsize = 32;
         bg_color = p.color(235,235,235);
-        tic_color = p.color(0);
+        // tic_color = p.color(0);
 
         p.createCanvas(p.windowWidth, p.windowHeight);
         p.background(bg_color);
@@ -50,12 +35,21 @@ var myp5 = new p5( function( p ) {
         $(window).on('submit', function (e) {
             setTimeout(function() {
                 drawGuess();
+                drawtimeStamp();
             }, 50); 
         });
 
-        // go!
+        // listen for ready state
+        $(window).on('ready', function (e) {
+            setTimeout(function() {
+                resetDrawing();
+            }, 50); 
+        });
+        
+
         game = new Game();
-        resetDrawing();
+        // resetDrawing();
+
         game.setup();
         game.render();
     }
@@ -66,20 +60,19 @@ var myp5 = new p5( function( p ) {
 
     p.draw = function() { 
         if (game.state === STATE.PLAYING) {
-            console.log(game.state)
             drawTrack();
-            drawTimer();
-            //drawArm();
+            isReset = false;
         } else if (game.state === STATE.WIN) {
-            drawWin();
+            // drawWin();
         } else if (game.state === STATE.READY) {
-            resetDrawing();         
-        }
+            // resetDrawing();           
+        } else {}
 
-        //p.image(layer2, 0, 0);
+        p.image(layer2, 0, 0);
     }
 
-    function resetDrawing() {
+    resetDrawing = function(isReset) {
+
         p.background(bg_color);
 
         // track
@@ -93,6 +86,10 @@ var myp5 = new p5( function( p ) {
         tic = 0;
         timerAngle = 0;
         timerRadius = 300 + 300 * (1/10);
+
+        game.timer.onTick((minutes, seconds) => {
+            drawTimer();
+        });
     }
 
     function drawTrack() {
@@ -119,7 +116,7 @@ var myp5 = new p5( function( p ) {
 
         p.pop();
 
-        angle+= tic_step; // += .5;
+        angle += track_step; // += .5;
     }
 
     function drawTimer() {
@@ -129,19 +126,19 @@ var myp5 = new p5( function( p ) {
         p.push();
         p.translate(p.width/2,p.height/2); // center
 
-        tic_size = (tic % 30) ? 5 : 10;
+        tic_size = (tic % 10) ? 5 : 10;
         tx = p.sin(p.radians(timerAngle))*timerRadius;
         ty = p.cos(p.radians(timerAngle))*timerRadius;
         tx2 = p.sin(p.radians(timerAngle))*(timerRadius+tic_size);
         ty2 = p.cos(p.radians(timerAngle))*(timerRadius+tic_size);
 
         p.noFill();
-        p.stroke((tic % 3) ? bg_color : tic_color); // only render every 3rd tic
+        p.stroke(0);
         p.line(tx, ty, tx2, ty2);
 
         p.pop();
 
-        timerAngle += tic_step;
+        timerAngle += clock_step;
         tic++;
     }
 
@@ -181,6 +178,29 @@ var myp5 = new p5( function( p ) {
         p.pop();
     }
 
+    function drawtimeStamp() {
+
+        var x, y;
+
+        p.push();
+        
+        x = p.sin(p.radians(timerAngle))*(timerRadius+50);
+        y = p.cos(p.radians(timerAngle))*(timerRadius+50);
+        p.translate(p.width/2 + x, p.height/2 + y);// bring zero point to the center 
+        p.rotate(p.radians(90-timerAngle));
+
+        if (game.state === STATE.WIN) {
+            p.fill(255,0,0);
+            p.textSize(18);
+        } else {
+            p.fill(0);
+            p.textSize(12);
+        }
+        p.text(game.timeRemaining, 0, 0);
+
+        p.pop();
+    }
+
     function drawWin() {
 
         var x, y, x2, y2
@@ -192,8 +212,6 @@ var myp5 = new p5( function( p ) {
         y = 0
         x2 = p.sin(p.radians(timerAngle))*(timerRadius+60);
         y2 = p.cos(p.radians(timerAngle))*(timerRadius+60);
-        // x2 = p.sin(p.radians(angle))*radius;
-        // y2 = p.cos(p.radians(angle))*radius;
 
         p.noFill();
         p.stroke(0); 
@@ -202,9 +220,10 @@ var myp5 = new p5( function( p ) {
         p.fill(255,0,0);
         p.noStroke();
         p.textSize(24);
-        p.text('39 sec!', x2, y2);
+        //p.text(game.timeRemaining, x2, y2);
 
         p.pop();
+
     }
 });
 
