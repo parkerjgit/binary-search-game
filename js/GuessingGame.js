@@ -200,8 +200,8 @@ Game.prototype.getReady = function() {
     this.state = STATE.READY;
 
     this.status = `Level ${this.level}: You have 60 seconds to guess a number between \
-        ${(this.lo).toString()} and ${(this.hi).toString()}. When your ready, key in your \
-        first guess. The clock starts when you press ENTER.`;
+        ${(this.lo).toString()} and ${(this.hi).toString()}. When you're ready, key in your \
+        first guess AND THEN press ENTER. The clock starts when you press ENTER.`;
 
     this.broadCastReady();
 }
